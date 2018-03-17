@@ -1,0 +1,12 @@
+{
+  "name": "project-euler-problems",
+  "version": "1.0.0",
+  "description": "Solutions for the problems on projecteuler.net",
+  "author": "James Miner (immrama87@gmail.com)",
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "mocha": "^5.0.4"
+  }
+}
