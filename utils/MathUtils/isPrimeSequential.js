@@ -6,6 +6,7 @@ var primesCached = [1,2,3];
  * number of smaller primes is too great.
  *
  * Cost savings are limited, but for finding all primes below 2,000,000 execution is ~1s shorter.
+ * Cost savings also only start when N~=250,000
  */
 function isPrimeSequential(number){
   if(primesCached.indexOf(number) > -1)
