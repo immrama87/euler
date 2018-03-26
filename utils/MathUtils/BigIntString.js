@@ -1,14 +1,10 @@
 var BigIntString = (function(int){
   int = (int || "0").toString();
 
-  function sumReduce(total, next){return total+next;}
-  function subtractReduce(total, next){return total-next;}
-  function multiplyReduce(total, next){return total*next;}
-
   function validateInput(number){
     number = number.toString().replace("-", (-1).toString()[0]);
     if(isNaN(parseInt(number))){
-      throw "The number " + number + " is not a valid number string. If the number is presented in scientific notation, it will be necessary to refactor the code to create the BigIntString earlier and perform transforms.";
+      throw "The number " + number + " is not a valid integer number string. If the number is presented in scientific notation, it will be necessary to refactor the code to create the BigIntString earlier and perform transforms.";
     }
 
     return number
@@ -21,7 +17,7 @@ var BigIntString = (function(int){
     //Just to be sure...
     newInt = newInt.toString();
 
-    var fromNew, fromInt, fromRemaining;
+    var fromNew, fromInt;
     var intArray = int.split(""),
         newArray = newInt.split(""),
         remaining = 0;
@@ -35,13 +31,13 @@ var BigIntString = (function(int){
         if(remainderIsNegative)
           remaining = parseInt(remaining) * -1;
 
-        var newFrom = [parseInt(fromInt), parseInt(remaining)].reduce(sumReduce);
+        var newFrom = [parseInt(fromInt), parseInt(remaining)].reduce(MathUtils.reducers.sumReduce);
         fromInt = newFrom;
       }
 
       var result = [parseInt(fromInt), parseInt(fromNew)].reduce(opReduce);
       remainderIsNegative = (result < 0);
-      if(remainderIsNegative && opReduce == subtractReduce){
+      if(remainderIsNegative && opReduce == MathUtils.reducers.subtractReduce){
         remaining = 0;
         while(result < 0){
           result += 10;
@@ -53,7 +49,7 @@ var BigIntString = (function(int){
       else {
         var resultDigits = Math.abs(result).toString().split("");
         newIntArray.splice(0,0,resultDigits.pop());
-        remaining = resultDigits.join("");
+        remaining = resultDigits.join("") || 0;
       }
     }
 
@@ -68,8 +64,6 @@ var BigIntString = (function(int){
       while((digit = resultDigits.pop()) != undefined){
         newIntArray.splice(0,0,digit);
       }
-
-      intArray = [];
     }
     else if(remaining != 0){
       var remainingDigits = remaining.toString().split("");
@@ -78,8 +72,7 @@ var BigIntString = (function(int){
         newIntArray.splice(0,0,digit);
       }
     }
-
-    if(intArray.length > 0){
+    else if(intArray.length > 0){
       remainderIsNegative = false;
       for(var i=intArray.length - 1;i>=0;i--){
         newIntArray.splice(0,0,intArray[i]);
@@ -92,20 +85,23 @@ var BigIntString = (function(int){
       int = (-1).toString()[0] + int;
   }
 
-  function isLarger(newNumber){
-    if(int.length > newNumber.length){
+  function isLarger(newNumber, oldNumber){
+    oldNumber = oldNumber || int;
+    if(oldNumber.length > newNumber.length){
       return false;
     }
-    else if(newNumber.length > int.length){
+    else if(newNumber.length > oldNumber.length){
       return true;
     }
     else {
-      for(var i=0;i<int.length;i++){
-        if(parseInt(int[i]) != parseInt(newNumber[i])){
-          return parseInt(int[i]) < parseInt(newNumber[i]);
+      for(var i=0;i<oldNumber.length;i++){
+        if(parseInt(oldNumber[i]) != parseInt(newNumber[i])){
+          return parseInt(oldNumber[i]) < parseInt(newNumber[i]);
         }
       }
     }
+
+    return false;
   }
 
   function add(toAdd){
@@ -114,17 +110,22 @@ var BigIntString = (function(int){
       subtract(toAdd.substring(1));
     }
     else {
-      doOperation(toAdd, sumReduce);
+      doOperation(toAdd, MathUtils.reducers.sumReduce);
     }
   }
 
   function subtract(toSubtract){
     toSubtract = validateInput(toSubtract);
-    var operation = subtractReduce;
+    var operation = MathUtils.reducers.subtractReduce;
     var setNegative = false;
 
-    if(parseInt(toSubtract) < 0){
+    var signsMatch = ((parseInt(toSubtract) < 0) == (parseInt(int) < 0));
+
+    if(!signsMatch){
       add(toSubtract.substring(1));
+
+      if(parseInt(int) < 0)
+        int = (-1).toString()[0] + int;
     }
     else {
       if(isLarger(toSubtract)){
@@ -135,6 +136,10 @@ var BigIntString = (function(int){
       }
 
       doOperation(toSubtract, operation);
+      while(int[0] == "0"){
+        int = int.substring(1);
+      }
+
       if(setNegative)
         int = (-1).toString()[0] + int;
     }
@@ -154,7 +159,7 @@ var BigIntString = (function(int){
       toMultiply = toMultiply.substring(1);
     }
 
-    var fromNew, fromInt, fromRemaining;
+    var fromNew, fromInt;
     var intArray = int.split(""),
         newArray = toMultiply.split("");
 
@@ -166,10 +171,10 @@ var BigIntString = (function(int){
       for(var i=intArray.length-1;i>=0;i--){
         fromInt = intArray[i];
 
-        var result = [parseInt(fromInt), parseInt(fromNew)].reduce(multiplyReduce);
+        var result = [parseInt(fromInt), parseInt(fromNew)].reduce(MathUtils.reducers.multiplyReduce);
 
         if(remaining != 0){
-          result = [parseInt(result), parseInt(remaining)].reduce(sumReduce);
+          result = [parseInt(result), parseInt(remaining)].reduce(MathUtils.reducers.sumReduce);
         }
 
         var resultDigits = Math.abs(result).toString().split("");
@@ -195,11 +200,62 @@ var BigIntString = (function(int){
       int = (-1).toString()[0] + int;
   }
 
+  function divide(toDivide){
+    toDivide = validateInput(toDivide);
+    var intIsNegative = false;
+    if(parseInt(int) < 0){
+      intIsNegative = true;
+      int = int.substring(1);
+    }
+
+    var newIsNegative = false;
+    if(parseInt(toDivide) < 0){
+      newIsNegative = true;
+      toDivide = toDivide.substring(1);
+    }
+
+    var intArray = int.split("");
+    var newInt = [];
+    var currentNumerator = "";
+
+    while(intArray.length > 0){
+      currentNumerator += intArray.splice(0,1)[0];
+      if(!isLarger(toDivide, currentNumerator)){
+        var divisor = new BigIntString(toDivide);
+        var iters = 1;
+
+        while(!isLarger(divisor.value(), currentNumerator)){
+          divisor.add(toDivide);
+          iters++;
+        }
+
+        newInt.push((iters-1).toString());
+        divisor.subtract(toDivide);
+
+        var numerator = new BigIntString(currentNumerator);
+        numerator.subtract(divisor.value());
+        currentNumerator = numerator.value();
+      }
+      else {
+        newInt.push("0");
+      }
+    }
+
+    while(newInt[0] == "0"){
+      newInt.splice(0,1);
+    }
+
+    int = newInt.join("");
+
+    if(intIsNegative != newIsNegative)
+      int = (-1).toString()[0] + int;
+  }
 
   return {
     add: add,
     subtract: subtract,
     multiply: multiply,
+    divide: divide,
     value: function(){return int;}
   };
 });

@@ -2,6 +2,8 @@ module.exports = {
   getFactorsOf: require("./getFactorsOf"),
   getPrimeFactorsOf: require('./getPrimeFactorsOf'),
   isPrime: require("./isPrime"),
-  isPrimeSequential: require("./isPrimeSequential"),
-  BigIntString: require("./BigIntString")
+  BigIntString: require("./BigIntString"),
+  BigFloatString: require("./BigFloatString"),
+  reducers: require("./reducers"),
+  AtkinsSieve: require("./AtkinsSieve")
 };

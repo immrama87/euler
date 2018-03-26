@@ -1,5 +1,5 @@
 var assert = require('assert');
-var MathUtils = require("../utils/MathUtils");
+global.MathUtils = require("../utils/MathUtils");
 
 describe("MathUtils", function(){
   describe("BigIntString", function(){
@@ -64,6 +64,68 @@ describe("MathUtils", function(){
       });
     });
 
+    describe("#divide", function(){
+      it("should return 2 when dividing 11419725308641972530864197253086419725 by 4567890123456789012345678901234567890", function(){
+        //Float value would be 2.5, want to make sure it stops at the decimal and does not round.
+        var int = new MathUtils.BigIntString("11419725308641972530864197253086419725");
+        int.divide("4567890123456789012345678901234567890");
+
+        assert.equal(int.value(), "2");
+      });
+
+      it("should return 2345678901234567890123456789 when dividing 10714803485750355520042923069094687353619878750190519987501905210 by 4567890123456789012345678901234567890", function(){
+        this.timeout(10000);
+        var int = new MathUtils.BigIntString("10714803485750355520042923069094687353619878750190519987501905210");
+        int.divide("4567890123456789012345678901234567890");
+
+        assert.equal(int.value(), "2345678901234567890123456789");
+      });
+    });
+  });
+
+  describe("BigFloatString", function(){
+    describe("#add", function(){
+      it("should return 1230204732597174794691864.225855260104731370771 when adding 12345678901234567890.12345678901234567890 to 1230192386918273560123974.102398471092385691871", function(){
+        var float = new MathUtils.BigFloatString("1230192386918273560123974.102398471092385691871");
+        float.add("12345678901234567890.12345678901234567890");
+
+        assert.equal(float.value(), "1230204732597174794691864.225855260104731370771");
+      })
+    });
+
+    describe("#subtract", function(){
+      it("should return 11115486514316294329999482.02105831791995998703023456 when subtracting 1230192386918273560123974.102398471092385691871 from 12345678901234567890123456.12345678901234567890123456", function(){
+        var float = new MathUtils.BigFloatString("12345678901234567890123456.12345678901234567890123456");
+        float.subtract("1230192386918273560123974.102398471092385691871");
+
+        assert.equal(float.value(), "11115486514316294329999482.02105831791995998703023456");
+      });
+    });
+
+    describe("#multiply", function(){
+      it("should return 1518520250530848485053084766.64186995677738 when multiplying 12345678901234567890123456.1234567 by 123.0001414", function(){
+        var float = new MathUtils.BigFloatString("12345678901234567890123456.1234567");
+        float.multiply("123.0001414");
+
+        assert.equal(float.value(), "1518520250530848485053084766.64186995677738");
+      });
+
+      it("should return -1518520250530848485053084766.64186995677738 when multiplying 12345678901234567890123456.1234567 by -123.0001414", function(){
+        var float = new MathUtils.BigFloatString("12345678901234567890123456.1234567");
+        float.multiply("-123.0001414");
+
+        assert.equal(float.value(), "-1518520250530848485053084766.64186995677738");
+      });
+    });
+
+    describe("#divide", function(){
+      it("should return 0.142857142857... when dividing 1.0 by 7.0", function(){
+        var float = new MathUtils.BigFloatString("1.0");
+        float.divide("7.0");
+
+        assert.equal(float.value(), "0.142857142857...");
+      });
+    });
   });
 
   describe("#getFactorsOf", function(){
@@ -111,35 +173,6 @@ describe("MathUtils", function(){
 
     it("should return false when determining if 525 is prime", function(){
       assert.ok(!MathUtils.isPrime(525));
-    });
-  });
-
-  describe("#isPrimeSequential", function(){
-    it("should return the list of primes below 250,000 slightly faster than #isPrime", function(){
-      this.timeout(10000);
-      var primes = [];
-      var startTime = new Date().getTime();
-      for(var i=1;i<=250000;i++){
-        if(MathUtils.isPrime(i)){
-          primes.push(i);
-        }
-      }
-      var endTime = new Date().getTime();
-      var isPrimeRunTime = endTime - startTime;
-
-      var primesSequential = [];
-      var startSequential = new Date().getTime();
-      for(var i=1;i<=250000;i++){
-        if(MathUtils.isPrimeSequential(i)){
-          primesSequential.push(i);
-        }
-      }
-      var endSequential = new Date().getTime();
-      var isPrimeSequentialRunTime = endSequential - startSequential;
-      var difference = isPrimeSequentialRunTime - isPrimeRunTime;
-
-      assert.equal(primes.length, primesSequential.length);
-      assert.ok(difference < 0, "#isPrime was faster by " + difference + "ms");
     });
   });
 });

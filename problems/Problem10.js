@@ -7,18 +7,10 @@ var inputDefs = {
 var solverFunction = function(inputs){
   var x = parseInt(inputs.x);
 
-  var sum = 2;
-  var test = 3;
+  var sieve = new MathUtils.AtkinsSieve(x);
+  var primes = sieve.generate();
 
-  while(test<x){
-    if(MathUtils.isPrimeSequential(test)){
-      sum += test;
-    }
-
-    test += 2;
-  }
-
-  return sum;
+  return primes.reduce(function(a,b){return a+b;});
 }
 
 var problem = new Problem(description, inputDefs, solverFunction);
